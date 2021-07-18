@@ -1,0 +1,15 @@
+input,
+.p-inputtext {
+	width: 100%;
+	outline: none;
+	border: none;
+	border-radius: 3px;
+	margin-top: 5px;
+}
+
+input:hover,
+input:focus,
+.p-inputtext:hover {
+	outline: none;
+	border: none;
+}

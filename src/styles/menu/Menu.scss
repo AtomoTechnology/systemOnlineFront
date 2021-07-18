@@ -1,0 +1,25 @@
+*{
+    margin: 0;padding: 0;
+}
+.sub-menu-main{
+    background-color: rgb(21, 46, 78);
+
+    color: white;
+}
+.sub-menu{
+    list-style: none;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    color:white;
+    height: 50px;
+}
+
+.sub-menu  li :hover{
+    background-color: rgb(32, 72, 124);
+}
+.sub-menu  li  a{
+    color: white;
+    padding: 10px !important;
+    text-decoration: none;
+}
