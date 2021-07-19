@@ -2,14 +2,10 @@ import { fetchWithOutToken } from '../helpers/fetch';
 import { types } from '../types/types';
 
 export const startRegisterClient = (formValues) => {
-	console.log('12');
 	return async (dispatch) => {
 		console.log(formValues);
-
-		console.log('123');
 		const query = await fetchWithOutToken('users', formValues, 'POST');
 		const result = await query.json();
-		// if(result.)
 		console.log(result);
 		dispatch(registerClient(formValues));
 	};

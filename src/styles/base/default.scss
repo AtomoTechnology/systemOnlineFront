@@ -5,11 +5,13 @@ input,
 	border: none;
 	border-radius: 3px;
 	margin-top: 5px;
+	border: 0 !important;
 }
 
 input:hover,
 input:focus,
 .p-inputtext:hover {
-	outline: none;
-	border: none;
+	outline: none !important;
+	border: none !important;
+	border: 0 !important;
 }

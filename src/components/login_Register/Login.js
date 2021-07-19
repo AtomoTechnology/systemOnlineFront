@@ -1,22 +1,11 @@
 import React, { useState } from 'react';
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
-// import FormControlLabel from '@material-ui/core/FormControlLabel';
-// import Checkbox from '@material-ui/core/Checkbox';
-import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
-import Container from '@material-ui/core/Container';
-import { Link } from 'react-router-dom';
-import { useForm } from '../../hooks/UseForm';
-// import { fetchWithOutToken } from '../../helpers/fetch';
 import { useDispatch } from 'react-redux';
+import { InputText } from 'primereact/inputtext';
+import { Message } from 'primereact/message';
 import { startLogin } from '../../action/loginAction';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { useForm } from '../../hooks/UseForm';
+import { Password } from 'primereact/password';
+import { Button } from 'primereact/button';
 
 export function Login() {
 	const dispatch = useDispatch();
@@ -58,67 +47,81 @@ export function Login() {
 
 	return (
 		<div className="login">
-			<form onSubmit={loginUser} className="login-form" id="login-form">
-				<input
-					className="form-control"
-					onChange={handleInputChange}
-					required
-					id="usernameOrEmail"
-					label="username or email "
-					name="userName"
-					autoComplete="userName"
-					value={userName}
-					autoFocus
-					type="text"
-				/>
-				{errors.userName ? (
-					<div className="alert alert-error" severity="warning">
-						El usuario no es valido!!!
-					</div>
-				) : (
-					''
-				)}
+			<div className="login-form" id="login-form">
+				<form onSubmit={loginUser} className="form-login">
+					<h3 className="login-title">
+						<span
+							style={{ fontSize: '1.5rem', marginRight: '10px' }}
+							className="pi pi-user"
+						></span>
+						Login
+					</h3>
+					<div className="p-grid">
+						<div className="input-field col s6 p-col-12">
+							<span className="p-float-label">
+								<InputText
+									id="userName"
+									className="userName"
+									name="userName"
+									onChange={handleInputChange}
+									value={userName}
+									autoComplete="false"
+									// tooltip="nombre de usuario"
+								/>
+								<label htmlFor="userName">Nombre de Usuario</label>
+							</span>
+							{errors.userName && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="El nombre de usuario es obligatorio!"
+									/>
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-12">
+							<span className="p-float-label">
+								<Password
+									value={userPass}
+									onChange={handleInputChange}
+									toggleMask
+									name="userPass"
+									autoComplete="false"
+								/>
 
-				<input
-					className="form-control"
-					onChange={handleInputChange}
-					// required
-					fullWidth
-					name="userPass"
-					label="Password"
-					type="password"
-					id="userPass"
-					value={userPass}
-					autoComplete="current-password"
-				/>
-				{errors.userPass ? (
-					<div className="alert alert-error" severity="warning">
-						La contreseña no correcta!!!!
-					</div>
-				) : (
-					''
-				)}
+								<label htmlFor="userPass">Contraseña</label>
+							</span>
+							{errors.userPass && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="La contraseña es obligatoria!"
+									/>
+								</span>
+							)}
+						</div>
 
-				<button
-					className="btn btn-primary"
-					type="submit"
-					disabled={userName.length < 3 || userPass.length < 3}
-				>
-					{submitting ? 'espere...' : 'Sign In'}
-				</button>
-				{/* <Grid container>
-					<Grid item xs>
-						<Link href="#" variant="body2">
-							Forgot password?
-						</Link>
-					</Grid>
-					<Grid item>
-						<Link to="/register" variant="body2">
-							{"Don't have an account? Sign Up"}
-						</Link>
-					</Grid>
-				</Grid> */}
-			</form>
+						<Button
+							label="Inicia session"
+							type="submit"
+							id="btn-login"
+							className="p-button-raised"
+							// disabled={userName.length < 3 || userPass.length < 3}
+						/>
+						<div className="p-d-flex p-jc-around  p-col-12 forget-password-sign-up">
+							<div className="forget-password">
+								<a href="#">Forget password</a>
+							</div>
+							<div className="sign-up">
+								¿No tiene una cueta ?{' '}
+								<a href="/register" className="inicia-session">
+									Registrarse
+								</a>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
 	);
 }

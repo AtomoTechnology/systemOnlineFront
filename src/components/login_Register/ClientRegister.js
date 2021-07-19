@@ -1,73 +1,66 @@
-import React, { useEffect } from 'react';
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
-// import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
-import Container from '@material-ui/core/Container';
+import React, { useEffect, useState } from 'react';
+import { InputText } from 'primereact/inputtext';
+import { Message } from 'primereact/message';
+import { Button } from 'primereact/button';
+import { Dropdown } from 'primereact/dropdown';
 import { Link } from 'react-router-dom';
 import { fetchWithOutToken } from '../../helpers/fetch';
 import { startRegisterClient } from '../../action/Register';
 import { useDispatch } from 'react-redux';
-function Copyright() {
-	return (
-		<Typography variant="body2" color="textSecondary" align="center">
-			{'Copyright © '}
-			<Link color="inherit" href="https://material-ui.com/">
-				Your Website
-			</Link>{' '}
-			{new Date().getFullYear()}
-			{'.'}
-		</Typography>
-	);
-}
-
-const useStyles = makeStyles((theme) => ({
-	paper: {
-		marginTop: theme.spacing(8),
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-	},
-	avatar: {
-		margin: theme.spacing(1),
-		backgroundColor: theme.palette.secondary.main,
-	},
-	form: {
-		width: '100%', // Fix IE 11 issue.
-		marginTop: theme.spacing(3),
-	},
-	submit: {
-		margin: theme.spacing(3, 0, 2),
-	},
-}));
+import { useForm } from '../../hooks/UseForm';
+import { Password } from 'primereact/password';
 
 export default function ClientRegister() {
 	const dispatch = useDispatch();
+	const [countries, setCountries] = useState([]);
+	const [provincesUser, setProvincesUser] = useState([]);
+	const [citiesUser, setCitiesUser] = useState([]);
+	const [documentTypes, setDocumentTypes] = useState([]);
+	const [countryUserSelected, setCountryUserSelected] = useState([]);
+	const [provinceUserSelected, setProvinceUserSelected] = useState([]);
+	const [errors, setErrors] = useState([]);
 
-	let data = {
-		phone: '3417208882',
-		firstName: 'Hilaire',
-		lastName: 'Jean',
-		address: 'Sarmiento',
-		typeDocument: 'dni',
-		docNumber: '95898862',
-		idRole: 1,
-		userName: 'Pradel',
-		userPass: '123abc',
-		idCountry: 1,
-		idProvince: 1,
-		idcity: 1,
-	};
-	console.log();
-	//get countries
+	useEffect(() => {
+		const getCountries = async () => {
+			const resp = await fetchWithOutToken('countries');
+			const body = await resp.json();
+			const queryDoctypes = await fetchWithOutToken('documenttypes');
+			const documentTypes = await queryDoctypes.json();
+			setCountries(body);
+			setDocumentTypes(documentTypes);
+		};
+		getCountries();
+	}, []);
+	const [values, handleInputChange, reset] = useForm({
+		phone: '',
+		firstName: '',
+		lastName: '',
+		address: '',
+		idDocumentType: '',
+		docNumber: '',
+		userName: '',
+		userPass: '',
+		idCountry: '',
+		idProvince: '',
+		idcity: '',
+		e_mail: '',
+		userPassConfirme: '',
+	});
+	const {
+		phone,
+		firstName,
+		lastName,
+		address,
+		idDocumentType,
+		docNumber,
+		userName,
+		userPass,
+		idCountry,
+		idProvince,
+		idcity,
+		e_mail,
+		userPassConfirme,
+	} = values;
 
 	useEffect(() => {
 		const getCountries = async () => {
@@ -78,122 +71,370 @@ export default function ClientRegister() {
 		getCountries();
 	}, []);
 
-	const createClient = (e) => {
+	const createClientAccount = (e) => {
 		e.preventDefault();
-		let i = 1;
-		if (i === 1) {
-			console.log('im');
-			dispatch(startRegisterClient(data));
+		values.idCountry = countryUserSelected?.id;
+		values.idProvince = provinceUserSelected?.id;
+		values.idcity = idcity?.id;
+		values.idDocumentType = idDocumentType?.id;
+		if (validateFormRegister()) {
+			dispatch(startRegisterClient(values));
+		} else {
+			console.log(errors);
 		}
-		// const resp = await fetch('http://localhost:5000/api/users',{
-		//   method : 'POST',
-		//   headers: {
-		//     'Content-Type': 'application/json'
-		//     // 'Content-Type': 'application/x-www-form-urlencoded',
-		//   },
-		//   body : JSON.stringify(data)
-		// }) ;
-		// console.log('1');
-		// console.log(resp);
-		// const body = await resp.json();
-		// console.log(body);
-		// console.log('2');
-		// fetch(url, {
-		//   method,
-		//   headers: {
-		//     "content-type": "application/json",
-		//     "x-token": token,
-		//   },
-		//   body: JSON.stringify(data),
-		// });
 	};
-	const classes = useStyles();
+
+	const filterProvinceByIdCountryUser = async (e) => {
+		setProvinceUserSelected([]);
+		values.idcity = '';
+		const idCountry = e.target.value?.id;
+		const query = await fetchWithOutToken(`provinces?idCountry=${idCountry}`);
+		const provincesCountry = await query.json();
+		setProvincesUser(provincesCountry);
+		setCountryUserSelected(e.target.value);
+	};
+	const filterCitiesByIdProvinceUser = async (e) => {
+		values.idcity = '';
+		const idProvince = e.target.value?.id;
+		const query = await fetchWithOutToken(`cities?idProvince=${idProvince}`);
+		const cities = await query.json();
+		setCitiesUser(cities);
+		setProvinceUserSelected(e.target.value);
+	};
+	const validateFormRegister = () => {
+		let errorsForm = [];
+		let formOk = true;
+		if (!firstName || firstName.lenght === 0) {
+			formOk = false;
+			errorsForm.firstName = true;
+		}
+		if (!lastName || lastName.lenght === 0) {
+			formOk = false;
+			errorsForm.lastName = true;
+		}
+		if (!idDocumentType) {
+			formOk = false;
+			errorsForm.idDocumentType = true;
+		}
+		if (!docNumber) {
+			formOk = false;
+			errorsForm.docNumber = true;
+		}
+		if (!userName || userName.lenght < 6 || userName.lenght > 50) {
+			formOk = false;
+			errorsForm.userName = true;
+		}
+		if (!userPass || userPass.lenght < 6 || userPass.lenght > 50) {
+			formOk = false;
+			errorsForm.userPass = true;
+		}
+		if (!idCountry) {
+			formOk = false;
+			errorsForm.idCountry = true;
+		}
+		if (!idProvince) {
+			formOk = false;
+			errorsForm.idProvince = true;
+		}
+		if (!idcity) {
+			formOk = false;
+			errorsForm.idcity = true;
+		}
+		if (!e_mail) {
+			formOk = false;
+			errorsForm.e_mail = true;
+		}
+
+		if (userPass !== userPassConfirme || !userPassConfirme) {
+			formOk = false;
+			errorsForm.userPassConfirme = true;
+		}
+
+		setErrors(errorsForm);
+		return formOk;
+	};
+
 	return (
-		<Container component="main" maxWidth="xs">
-			<CssBaseline />
-			<div className={classes.paper}>
-				<Avatar className={classes.avatar}>
-					<LockOutlinedIcon />
-				</Avatar>
-				<Typography component="h1" variant="h5">
-					Sign up Client
-				</Typography>
-				<form onSubmit={createClient} className={classes.form} noValidate>
-					<Grid container spacing={2}>
-						<Grid item xs={12} sm={6}>
-							<TextField
-								autoComplete="fname"
-								name="firstName"
-								variant="outlined"
-								required
-								fullWidth
-								id="firstName"
-								label="First Name"
-								autoFocus
+		<div className="business-register">
+			<form
+				action="#"
+				onSubmit={createClientAccount}
+				className="business-register-form"
+			>
+				<div className="responsable-data">
+					<h3 className="title-business-section">Datos del responsable</h3>
+					<div className="p-grid">
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<InputText
+									id="firstName"
+									className="firstName"
+									name="firstName"
+									onChange={handleInputChange}
+									value={firstName}
+								/>
+								<label htmlFor="firstName">Nombre</label>
+							</span>
+							{errors.firstName && (
+								<span className="alert">
+									<Message severity="error" text="El nombre es obligatorio" />
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<InputText
+									id="lastName"
+									className="lastName"
+									name="lastName"
+									onChange={handleInputChange}
+									value={lastName}
+								/>
+								<label htmlFor="lastName">Apellido</label>
+							</span>
+							{errors.lastName && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="El apellido es obligatorio!"
+									/>
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<InputText
+									id="address"
+									className="address"
+									name="address"
+									onChange={handleInputChange}
+									value={address}
+								/>
+								<label htmlFor="address">Direccion</label>
+							</span>
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<InputText
+									id="phone"
+									className="phone"
+									name="phone"
+									onChange={handleInputChange}
+									value={phone}
+								/>
+								<label htmlFor="phone">Telefono</label>
+							</span>
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<Dropdown
+								// value={idCountry}
+								options={documentTypes}
+								onChange={handleInputChange}
+								optionLabel="name"
+								name="idDocumentType"
+								filter
+								showClear
+								filterBy="name"
+								placeholder="Seleccionar un tipo de documento"
+								valueTemplate={idDocumentType?.name}
 							/>
-						</Grid>
-						<Grid item xs={12} sm={6}>
-							<TextField
-								variant="outlined"
-								required
-								fullWidth
-								id="lastName"
-								label="Last Name"
-								name="lastName"
-								autoComplete="lname"
+							{errors.idDocumentType && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="El tipo de documento es obligatorio"
+									/>
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<InputText
+									id="docNumber"
+									className="docNumber"
+									name="docNumber"
+									onChange={handleInputChange}
+								/>
+								<label htmlFor="docNumber">Numero Documento</label>
+							</span>
+							{errors.docNumber && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="El numero de document es obligatorio"
+									/>
+								</span>
+							)}
+						</div>
+
+						<div className="input-field col s6 p-col-6">
+							<Dropdown
+								// value={idCountry}
+								options={countries}
+								onChange={filterProvinceByIdCountryUser}
+								optionLabel="name"
+								name="idCountry"
+								filter
+								showClear
+								filterBy="name"
+								placeholder="Selecciona un pais"
+								valueTemplate={countryUserSelected?.name}
 							/>
-						</Grid>
-						<Grid item xs={12}>
-							<TextField
-								variant="outlined"
-								required
-								fullWidth
-								id="email"
-								label="Email Address"
-								name="email"
-								autoComplete="email"
+							{errors.idCountry && (
+								<span className="alert">
+									<Message severity="error" text="Hay que elegir un pais!" />
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<Dropdown
+								options={provincesUser}
+								onChange={filterCitiesByIdProvinceUser}
+								optionLabel="name"
+								name="idProvince"
+								filter
+								showClear
+								filterBy="name"
+								placeholder="Selecciona una provincia"
+								valueTemplate={provinceUserSelected?.name}
 							/>
-						</Grid>
-						<Grid item xs={12}>
-							<TextField
-								variant="outlined"
-								required
-								fullWidth
-								name="password"
-								label="Password"
-								type="password"
-								id="password"
-								autoComplete="current-password"
+							{errors.idProvince && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="Hay que elegir una provincia!"
+									/>
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<Dropdown
+								options={citiesUser}
+								onChange={handleInputChange}
+								optionLabel="name"
+								name="idcity"
+								filter
+								showClear
+								filterBy="name"
+								placeholder="Selecciona una localidad"
+								valueTemplate={idcity?.name}
 							/>
-						</Grid>
-						<Grid item xs={12}>
-							<FormControlLabel
-								control={<Checkbox value="allowExtraEmails" color="primary" />}
-								label="I want to receive inspiration, marketing promotions and updates via email."
-							/>
-						</Grid>
-					</Grid>
-					<Button
-						type="submit"
-						fullWidth
-						variant="contained"
-						color="primary"
-						className={classes.submit}
-					>
-						Sign Up Client
-					</Button>
-					<Grid container justifyContent="flex-end">
-						<Grid item>
-							<Link to="/login" variant="body2">
-								Already have an account? Sign in
-							</Link>
-						</Grid>
-					</Grid>
-				</form>
-			</div>
-			<Box mt={5}>
-				<Copyright />
-			</Box>
-		</Container>
+							{errors.idcity && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="Hay que elegir una localidad!"
+									/>
+								</span>
+							)}
+						</div>
+					</div>
+				</div>
+
+				<div className="account-data">
+					<h3 className="title-business-section">Datos de la cuenta</h3>
+					<div className="p-grid">
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<InputText
+									id="userName"
+									className="userName"
+									name="userName"
+									onChange={handleInputChange}
+									value={userName}
+								/>
+								<label htmlFor="userName">Nombre de Usuario</label>
+							</span>
+							{errors.userName && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="El nombre de usuario es obligatorio!"
+									/>
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<Password
+									value={userPass}
+									onChange={handleInputChange}
+									toggleMask
+									name="userPass"
+								/>
+
+								<label htmlFor="userPass">Contraseña</label>
+							</span>
+							{errors.userPass && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="La contraseña es obligatoria!"
+									/>
+								</span>
+							)}
+						</div>
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<Password
+									value={userPassConfirme}
+									onChange={handleInputChange}
+									name="userPassConfirme"
+									toggleMask
+								/>
+								<label htmlFor="userPassConfirme"> Confirmar Contraseña</label>
+							</span>
+							{errors.userPassConfirme && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="Las contraseñas deben coincidir!"
+									/>
+								</span>
+							)}
+						</div>
+
+						<div className="input-field col s6 p-col-6">
+							<span className="p-float-label">
+								<InputText
+									id="e_mail"
+									className="e_mail"
+									name="e_mail"
+									onChange={handleInputChange}
+									value={e_mail}
+								/>
+								<label htmlFor="e_mail">Email</label>
+							</span>
+							{errors.e_mail && (
+								<span className="alert">
+									<Message
+										severity="error"
+										text="El email del negocio es obligatorio"
+									/>
+								</span>
+							)}
+						</div>
+					</div>
+				</div>
+
+				<Button
+					label="Create Cuenta"
+					type="submit"
+					id="btn-register"
+					className="p-button-raised"
+				/>
+				<div className="p-d-flex p-jc-around  p-col-12 forget-password-sign-up">
+					<div className="forget-password">
+						<a href="#">Forget password</a>
+					</div>
+					<div className="sign-up">
+						¿Ya tiene una cueta ?{' '}
+						<a href="/login" className="inicia-session">
+							Inicia sesion
+						</a>
+					</div>
+				</div>
+			</form>
+		</div>
 	);
 }
