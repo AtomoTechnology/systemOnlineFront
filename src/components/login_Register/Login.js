@@ -13,8 +13,8 @@ export function Login() {
 	const [errors, setErrors] = useState([]);
 
 	const [values, handleInputChange] = useForm({
-		userName: '',
-		userPass: '',
+		userName: 'testtest',
+		userPass: 'Test1test',
 	});
 
 	const { userName, userPass } = values;
